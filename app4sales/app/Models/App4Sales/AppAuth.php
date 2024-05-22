@@ -1,11 +1,13 @@
 <?php
-
 namespace App\Models\App4Sales;
+
+use Illuminate\Support\Facades\DB;
 
 class AppAuth extends Base
 {
 
     public string $endpoint = '';
+    private string $rights = '';
 
     /**
      * Base constructor
@@ -46,8 +48,30 @@ class AppAuth extends Base
         curl_setopt($ch, CURLOPT_USERPWD, $username . ":" . $password);
         curl_setopt($ch, CURLOPT_TIMEOUT, 30);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-        $return = curl_exec($ch);
-        curl_close($ch);
+        $response = curl_exec ($ch);
+        $err = curl_error($ch);
+        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+        if(!$err && $httpcode == 200){
+            $this->setRights($username);
+        }
+
+        curl_close ($ch);
+    }
+
+    /**
+     * Retrieves the rights from the DB if they are present and sets them in the class. 
+     *
+     * @param string $username
+     * @return void
+     */
+    private function setRights(string $username)
+    {
+        $user = DB::table('users')->where('usename', $username)->first();
+        if($user->rights)
+        {
+            $this->rights = $user->rights;
+        }
     }
 
 }
