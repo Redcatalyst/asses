@@ -4,18 +4,22 @@ namespace Tests\Unit;
 
 use Tests\TestCase;
 use App\Models\App4Sales\AppAuth;
+use Illuminate\Support\Facades\DB;
 
 class TestAuth extends TestCase
 {
     /**
-     * A basic test example.
+     * A basic test to validate if unknow/unauthorized logins are handled correctly 
      */
     public function testLoginEventOnUnknowUserAndPass(): void
     {
+        $username = 'test';
+        $password = 'test';
         $app = new AppAuth();
-        $app->authenticate('test','test');
+        $app->authenticate($username, $password);
 
         $this->assertTrue($app->endpoint == 'authenticate');
-        $this->assertTrue($app->getRights() == '');
+        $this->assertFalse($app->checkIfUserExists($username));
+        $this->assertTrue($app->assertAdminRights() == false);
     }
 }

@@ -67,11 +67,33 @@ class AppAuth extends Base
      */
     private function setRights(string $username)
     {
-        $user = DB::table('users')->where('username', $username)->first();
+        $user = $this->getUserRecordForUsername();
         if(!empty($user))
         {
             $this->rights = $user->rights;
         }
+    }
+
+    /**
+     * Check if the username exists
+     *
+     * @param string $username
+     * @return boolean True if exists, false if not
+     */
+    public function checkIfUserExists(string $username)
+    {
+        return !empty($this->getUserRecordForUsername($username));
+    }
+
+    /**
+     * Get user record if exists
+     *
+     * @param [type] $username
+     * @return void
+     */
+    private function getUserRecordForUsername($username)
+    {
+        return DB::table('users')->where('username', $username)->first();
     }
 
     /**
