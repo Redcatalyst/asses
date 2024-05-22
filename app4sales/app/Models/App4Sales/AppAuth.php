@@ -62,12 +62,11 @@ class AppAuth extends Base
     /**
      * Retrieves the rights from the DB if they are present and sets them in the class. 
      *
-     * @param string $username
      * @return void
      */
-    private function setRights(string $username)
+    private function setRights()
     {
-        $user = $this->getUserRecordForUsername();
+        $user = $this->getUserRecordForUsername($this->username);
         if(!empty($user))
         {
             $this->rights = $user->rights;
