@@ -25,7 +25,12 @@ class LoginController extends Controller
         $app = new AppAuth();
         $app->authenticate($credentials['username'], $credentials['password']);
 
-        dd($app);
+        if($app->assertAdminRights())
+        {
+            // Show special content
+        } 
+
+        dd($app->assertAdminRights());
 
         return back();
     }

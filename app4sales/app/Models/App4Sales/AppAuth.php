@@ -6,7 +6,11 @@ use Illuminate\Support\Facades\DB;
 class AppAuth extends Base
 {
 
-    public string $endpoint = '';
+    /**
+     * Set rights
+     *
+     * @var string
+     */
     private string $rights = '';
 
     /**
@@ -14,7 +18,7 @@ class AppAuth extends Base
      */
     public function __construct() 
     {
-        //
+        $this->setEndpoint('authenticate');
     }
 
     /**
@@ -26,8 +30,9 @@ class AppAuth extends Base
      */
     public function authenticate(string $username, string $password)
     {
-        $this->setEndpoint('authenticate');
-        $this->sendAuthRequest($username, $password);
+        $this->setUsername($username);
+        $this->setPassword($password);
+        $this->sendAuthRequest();
     }
 
     /**
@@ -43,29 +48,15 @@ class AppAuth extends Base
 
     /**
      * Send an auth request to check if the user is known
-     *
-     * @param string $username
-     * @param string $password
      * @return void
      */
-    private function sendAuthRequest(string $username, string $password)
+    private function sendAuthRequest()
     {
-        $ch = curl_init($this->base_url . $this->endpoint);
-        curl_setopt($ch, CURLOPT_HEADER, 1);
-        curl_setopt($ch, CURLOPT_USERPWD, $username . ":" . $password);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-        $response = curl_exec ($ch);
-        $err = curl_error($ch);
-        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close ($ch);
-
-        if(!$err && $httpcode == 200){
-            $this->setRights($username);
+        $request = $this->sendRequest();
+        if(!$request['error'] && $request['code'] == 200){
+            $this->setRights($this->username);
         }
-        $this->storeRequest($username, $httpcode, $response ?? '');
-
-        
+        $this->storeRequest($this->username, $request['code'], $request['response'] ?? '');
     }
 
     /**
@@ -76,11 +67,31 @@ class AppAuth extends Base
      */
     private function setRights(string $username)
     {
-        $user = DB::table('users')->where('usename', $username)->first();
-        if($user->rights)
+        $user = DB::table('users')->where('username', $username)->first();
+        if(!empty($user))
         {
             $this->rights = $user->rights;
         }
+    }
+
+    /**
+     * Assert admin rights
+     *
+     * @return void
+     */
+    public function assertAdminRights()
+    {
+        return $this->getRights() == 'all';
+    }
+
+    /**
+     * Get Rights
+     *
+     * @return void
+     */
+    private function getRights()
+    {
+        return $this->rights;
     }
 
     
@@ -95,7 +106,7 @@ class AppAuth extends Base
     private function storeRequest(string $username, string $code, string $response)
     {
         DB::table('login_log')->insert([
-            'username' => 'kayla@example.com',
+            'username' => $username,
             'success' => $code == '200' ? 1 : 0, 
             'response' => $response,
             'created_at' => date('d-m-Y h:i:s')
