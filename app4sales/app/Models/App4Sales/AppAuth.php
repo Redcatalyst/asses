@@ -56,7 +56,7 @@ class AppAuth extends Base
         if(!$request['error'] && $request['code'] == 200){
             $this->setRights($this->username);
         }
-        $this->storeRequest($this->username, $request['code'], $request['response'] ?? '');
+        $this->storeRequest($this->username, $request);
     }
 
     /**
@@ -110,28 +110,9 @@ class AppAuth extends Base
      *
      * @return void
      */
-    private function getRights()
+    public function getRights()
     {
         return $this->rights;
-    }
-
-    
-    /**
-     * Store authentication attempt 
-     *
-     * @param string $username
-     * @param string $code
-     * @param string $response
-     * @return void
-     */
-    private function storeRequest(string $username, string $code, string $response)
-    {
-        DB::table('login_log')->insert([
-            'username' => $username,
-            'success' => $code == '200' ? 1 : 0, 
-            'response' => $response,
-            'created_at' => date('d-m-Y h:i:s')
-        ]);
     }
 
 }

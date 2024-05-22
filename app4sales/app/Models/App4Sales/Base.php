@@ -2,6 +2,8 @@
 
 namespace App\Models\App4Sales;
 
+use Illuminate\Support\Facades\DB;
+
 class Base
 {
 
@@ -48,6 +50,7 @@ class Base
         curl_setopt($ch, CURLOPT_USERPWD, $this->username . ":" . $this->password);
         curl_setopt($ch, CURLOPT_TIMEOUT, 30);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $type); 
 
         if($type == 'POST')
         {
@@ -60,7 +63,7 @@ class Base
         $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close ($ch);
 
-        return ['response' => json_decode($response, true), 'error' => $error, 'code' => $httpcode];
+        return ['response' => json_decode($response, true), 'error' => $error, 'code' => $httpcode, 'endpoint' => $this->endpoint];
     }
 
     /**
@@ -82,5 +85,23 @@ class Base
     protected function setPassword(string $password)
     {
         $this->password = $password;
+    }
+
+    /**
+     * Store authentication attempt 
+     *
+     * @param string $username
+     * @param array $request
+     * @return void
+     */
+    protected function storeRequest(string $username, array $request)
+    {
+        DB::table('request_log')->insert([
+            'username' => $username ?? '',
+            'success' => $request['code'] == '200' ? 1 : 0, 
+            'response' => $request['response'] ?? '',
+            'endpoint' => $request['endpoint'] ?? '',
+            'created_at' => date('d-m-Y h:i:s')
+        ]);
     }
 }
