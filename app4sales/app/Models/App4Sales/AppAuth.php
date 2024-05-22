@@ -41,7 +41,14 @@ class AppAuth extends Base
         $this->endpoint = $endpoint;
     }
 
-    private function sendAuthRequest($username, $password)
+    /**
+     * Send an auth request to check if the user is known
+     *
+     * @param string $username
+     * @param string $password
+     * @return void
+     */
+    private function sendAuthRequest(string $username, string $password)
     {
         $ch = curl_init($this->base_url . $this->endpoint);
         curl_setopt($ch, CURLOPT_HEADER, 1);
@@ -51,12 +58,14 @@ class AppAuth extends Base
         $response = curl_exec ($ch);
         $err = curl_error($ch);
         $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close ($ch);
 
         if(!$err && $httpcode == 200){
             $this->setRights($username);
         }
+        $this->storeRequest($username, $httpcode, $response ?? '');
 
-        curl_close ($ch);
+        
     }
 
     /**
@@ -72,6 +81,25 @@ class AppAuth extends Base
         {
             $this->rights = $user->rights;
         }
+    }
+
+    
+    /**
+     * Store authentication attempt 
+     *
+     * @param string $username
+     * @param string $code
+     * @param string $response
+     * @return void
+     */
+    private function storeRequest(string $username, string $code, string $response)
+    {
+        DB::table('login_log')->insert([
+            'username' => 'kayla@example.com',
+            'success' => $code == '200' ? 1 : 0, 
+            'response' => $response,
+            'created_at' => date('d-m-Y h:i:s')
+        ]);
     }
 
 }
