@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use App\Models\App4Sales\AppAuth;
  
 class LoginController extends Controller
 {
@@ -16,32 +17,16 @@ class LoginController extends Controller
      */
     public function authenticate(Request $request): RedirectResponse
     {
-
         $credentials = $request->validate([
             'username' => ['required'],
             'password' => ['required'],
         ]);
+        
+        $app = new AppAuth();
+        $app->authenticate($credentials['username'], $credentials['password']);
 
-        //dd($credentials);
- 
-        if (Auth::attempt($credentials)) {
-            $request->session()->regenerate();
-            return redirect()->intended('dashboard');
-        }
+        dd($app);
+
         return back();
-    }
-
-    /**
-     * Undocumented function
-     *
-     * @param Request $request
-     * @return RedirectResponse
-     */
-    public function logout(Request $request): RedirectResponse
-    {
-        Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-        return redirect('/');
     }
 }
